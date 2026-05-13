@@ -1,25 +1,58 @@
-from selenium.webdriver.common.by import By
+import pytest
+from pages.login_page import LoginPage
+from pages.inventory_page import InventoryPage
 
 
-def test_successful_login(driver):
-    # navigate to saucedemo
-    driver.get("https://www.saucedemo.com/")
+class TestLogin:
+    """Login functionality tests for saucedemo.com"""
     
-    # find username and password fields
-    username_field = driver.find_element(By.ID, "user-name")
-    password_field = driver.find_element(By.ID, "password")
-    login_button = driver.find_element(By.ID, "login-button")
+    def test_successful_login_with_valid_credentials(self, driver):
+        login_page = LoginPage(driver)
+        login_page.load()
+        login_page.login("standard_user", "secret_sauce")
+        
+        inventory_page = InventoryPage(driver)
+        assert inventory_page.is_loaded(), "Inventory page did not load after login"
+        assert inventory_page.get_page_title() == "Products"
     
-    # enter credentials
-    username_field.send_keys("standard_user")
-    password_field.send_keys("secret_sauce")
+    def test_login_fails_with_locked_user(self, driver):
+        login_page = LoginPage(driver)
+        login_page.load()
+        login_page.login("locked_out_user", "secret_sauce")
+        
+        assert login_page.is_error_displayed(), "Expected error message for locked user"
+        error_text = login_page.get_error_message()
+        assert "locked out" in error_text.lower(), f"Unexpected error: {error_text}"
     
-    # click login
-    login_button.click()
+    def test_login_fails_with_wrong_password(self, driver):
+        login_page = LoginPage(driver)
+        login_page.load()
+        login_page.login("standard_user", "wrong_password_123")
+        
+        assert login_page.is_error_displayed(), "Expected error message for wrong password"
+        error_text = login_page.get_error_message()
+        assert "username and password do not match" in error_text.lower()
     
-    # verify we landed on the inventory page
-    assert "inventory.html" in driver.current_url
+    def test_login_fails_with_empty_credentials(self, driver):
+        login_page = LoginPage(driver)
+        login_page.load()
+        login_page.click_login()  # click login without entering anything
+        
+        assert login_page.is_error_displayed(), "Expected error for empty credentials"
+        error_text = login_page.get_error_message()
+        assert "username is required" in error_text.lower()
     
-    # verify the products header is visible
-    products_header = driver.find_element(By.CLASS_NAME, "title")
-    assert products_header.text == "Products"
+    @pytest.mark.parametrize("username,password,expected_error", [
+        ("", "secret_sauce", "username is required"),
+        ("standard_user", "", "password is required"),
+        ("invalid_user", "invalid_pass", "username and password do not match"),
+    ])
+    def test_login_negative_scenarios(self, driver, username, password, expected_error):
+        login_page = LoginPage(driver)
+        login_page.load()
+        login_page.login(username, password) if password else login_page.enter_username(username)
+        if not password:
+            login_page.click_login()
+        
+        assert login_page.is_error_displayed()
+        assert expected_error in login_page.get_error_message().lower()
