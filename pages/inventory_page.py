@@ -1,6 +1,6 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
-
+import time
 
 class InventoryPage(BasePage):
     """Page object for the saucedemo inventory (products) page."""

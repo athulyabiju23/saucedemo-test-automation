@@ -21,15 +21,3 @@ def driver():
     driver.quit()
 
 
-@pytest.fixture
-def slow_driver(driver):
-    """A driver that pauses between actions so you can see what's happening."""
-    # monkey-patch the driver to add delays
-    original_find = driver.find_element
-    
-    def slow_find(*args, **kwargs):
-        time.sleep(1)  # pause 1 second before finding
-        return original_find(*args, **kwargs)
-    
-    driver.find_element = slow_find
-    yield driver
