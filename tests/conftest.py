@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 from selenium import webdriver
@@ -20,10 +21,19 @@ def driver():
         "profile.password_manager_leak_detection": False,
     })
     
+    # run headless in CI environments
+    if os.getenv("HEADLESS") == "true":
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--window-size=1920,1080")
+    
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(5)
     
     yield driver
     
-    time.sleep(2)
+    # only pause if not in CI
+    if os.getenv("HEADLESS") != "true":
+        time.sleep(2)
     driver.quit()
