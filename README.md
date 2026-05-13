@@ -27,7 +27,8 @@ This project demonstrates a layered testing approach against two complementary t
 | Browser | Chrome / Chromium |
 
 ## Project Structure
-''''
+
+````
 saucedemo-test-automation/
 ├── .github/
 │   └── workflows/
@@ -51,7 +52,7 @@ saucedemo-test-automation/
 │   └── BUG-002-checkout-postal-code-validation.md
 ├── requirements.txt
 └── README.md
-''''
+````
 
 ## What's Tested
 
